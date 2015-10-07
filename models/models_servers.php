@@ -25,9 +25,13 @@ $task=new Webmodel('task');
 
 $task->change_id_default('id');
 
-$task->register('uuid', new CharField(255), true);
+$task->register('pid', new IntegerField(11), false);
+
+$task->register('user_id', new IntegerField(11), false);
 
 $task->register('ip', new CharField(255), true);
+
+$task->register('title', new CharField(255), true);
 
 $task->register('category', new CharField(255), true);
 
@@ -35,7 +39,7 @@ $task->register('module', new CharField(255), true);
 
 $task->register('script', new CharField(255), true);
 
-$task->register('arguments', new ArrayField(new CharField(255)), true);
+$task->register('arguments', new ArrayField(new CharField(255)), false);
 
 $task->register('status', new BooleanField());
 
