@@ -11,5 +11,10 @@
     "minimum-stability": "dev-master",
     "require": {
         "symfony/process": "@stable"
-    }    
+    },
+    "autoload": {
+        "psr-4": {
+            "Chorizon\\TheServers\\": "src"
+        }
+    }
 }
