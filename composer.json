@@ -1,0 +1,15 @@
+{
+    "name": "chorizon/theservers",
+    "description": "Module with models and daemons for create tasks ",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Antonio de la Rosa",
+            "email": "webmaster@web-t-sys.com"
+        }
+    ],
+    "minimum-stability": "dev-master",
+    "require": {
+        "symfony/process": "@stable"
+    }    
+}
