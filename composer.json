@@ -10,7 +10,8 @@
     ],
     "minimum-stability": "dev-master",
     "require": {
-        "symfony/process": "@stable"
+        "symfony/process": "@stable",
+	"monolog/monolog": "@stable"
     },
     "autoload": {
         "psr-4": {
