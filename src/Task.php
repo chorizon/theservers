@@ -5,14 +5,15 @@ use PhangoApp\PhaModels\Webmodel;
 use PhangoApp\PhaUtils\Utils;
 use PhangoApp\PhaRouter\Routes;
 use Symfony\Component\Process\Process;
-use Monolog\Logger;
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
 
 Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
 
 $insert_id=0;
 $process;
+
+define('ERROR_UPDATING_TASK', 1);
+define('ERROR_FORK', 2);
+define('NEED_TASK_ID', 3);
 
 class Task {
 
@@ -22,8 +23,13 @@ class Task {
         global $insert_id;
         global $process;
 	
-        $uuid1=Uuid::uuid1();
-        $token=$uuid1->toString();
+        Utils::load_config('config', __DIR__.'/../settings/');
+        Utils::load_config('configerrors', __DIR__.'/../settings/');
+        
+        if(!isset($settings['logs']))
+        {
+            $settings['logs']='./logs';
+        }
 	
         //Check that no other same processes is active
 	
@@ -36,6 +42,8 @@ class Task {
         $arr_server=Webmodel::$model['server']->select_a_row($arr_data_task['server']);
                     
         $arr_data_task['ip']=$arr_server['ip'];
+        
+        $arr_data_task['user_id']=$_SESSION['IdUser_admin'];
         
         if(Webmodel::$model['task']->insert($arr_data_task))
         {
@@ -57,7 +65,7 @@ class Task {
             $script=basename(Utils::slugify($arr_data_task['script']));
             $parameters='';
             
-            $process = new Process('php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script.' --uuid '.$token);
+            $process = new Process('php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script.' --id '.$insert_id);
             
             //echo 'php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script;
             
@@ -76,12 +84,22 @@ class Task {
                     
                     Webmodel::$model['task']->conditions='WHERE id='.$insert_id;
                     
-                    if(!Webmodel::$model['task']->update(array('pid' => $process->getPid())))
+                    if(!Webmodel::$model['task']->update(array('pid' => $arr_buffer['PID'])))
                     {
                     
-                        echo Webmodel::$model['task']->std_error;
+                        //echo Webmodel::$model['task']->std_error;
+                        //Save in database
+                        Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, cannot update the task', 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1));
+                        
                     
                     }
+                    else
+                    {
+                    
+                        Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Begin script execution...', 'ERROR' => 0, 'CODE_ERROR' => 0));
+                    
+                    }
+
                 }
             
                 die;
@@ -92,13 +110,26 @@ class Task {
         else
         {
         
-            echo 'Cannot insert the new task in database...->'.Webmodel::$model['task']->std_error;
+            //echo 'Cannot insert the new task in database...->'.Webmodel::$model['task']->std_error;
+            
+            throw new \Exception('Cannot insert the new task in database...->'.Webmodel::$model['task']->std_error);
         
         }
         
         //Obtain pid from daemon
 	
 	}
+	
+	//arr_log : array('MESSAGE' => "A message...", 'ERROR' => 0, 'CODE_ERROR' => 0, 'PROGRESS' => 0)
+	
+	static public function log_progress($arr_log)
+    {
+        
+        Webmodel::$model['log_task']->insert($arr_log);
+        
+        echo Webmodel::$model['log_task']->std_error;
+    
+    }
 	
 	static public function get_progress($idtask)
 	{
@@ -110,27 +141,43 @@ class Task {
 	static public function daemonize()
     {
     
-        $pid = pcntl_fork();
+        $options=get_opts_console('', $arr_opts=array('id:'));
         
-        if ($pid == -1)
+        settype($options['id'], 'integer');
+        
+        if($options['id']>0)
         {
-            echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'CANNOT FORK, check php configuration', 'CODE_ERROR' => PASTA_ERROR_FORK));
-            exit(1);
-        }
-        elseif ($pid)
-        {
-            echo json_encode(array('PID' => $pid));
-            exit(0);
+    
+            $pid = pcntl_fork();
+            
+            if ($pid == -1)
+            {
+                echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'CANNOT FORK, check php configuration', 'CODE_ERROR' => ERROR_FORK));
+                exit(1);
+            }
+            elseif ($pid)
+            {
+                echo json_encode(array('PID' => $pid, 'ERROR' => 0, 'MESSAGE' => 'Running tasks...', 'PROGRESS' => 0));
+                exit(0);
+            }
+            else
+            {
+            
+                //Daemonizing this element
+            
+                $sid = posix_setsid();
+            
+                return $options['id'];
+
+            }
+            
         }
         else
         {
         
-            //Daemonizing this element
+            echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'Need a task id for execute this script', 'CODE_ERROR' => NEED_TASK_ID));
+            exit(1);
         
-            $sid = posix_setsid();
-        
-            return true;
-
         }
 
     }
