@@ -22,6 +22,9 @@ class Task {
         global $insert_id;
         global $process;
 	
+        $uuid1=Uuid::uuid1();
+        $token=$uuid1->toString();
+	
         //Check that no other same processes is active
 	
         //Insert the new task in db
@@ -54,7 +57,7 @@ class Task {
             $script=basename(Utils::slugify($arr_data_task['script']));
             $parameters='';
             
-            $process = new Process('php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script);
+            $process = new Process('php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script.' --uuid '.$token);
             
             //echo 'php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script;
             
