@@ -11,7 +11,8 @@
     "minimum-stability": "dev-master",
     "require": {
         "symfony/process": "@stable",
-	"monolog/monolog": "@stable"
+	"monolog/monolog": "@stable",
+	"ramsey/uuid": "@stable"
     },
     "autoload": {
         "psr-4": {
