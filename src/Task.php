@@ -5,6 +5,8 @@ use PhangoApp\PhaModels\Webmodel;
 use PhangoApp\PhaUtils\Utils;
 use PhangoApp\PhaRouter\Routes;
 use Symfony\Component\Process\Process;
+use GuzzleHttp\Client;
+use \Exception;
 
 Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
 
@@ -145,13 +147,6 @@ class Task {
         
         if($options['id']>0)
         {
-            
-            //Obtain task
-            
-            
-
-            
-            //$arr_server=Webmodel::$model['server']->select_a_row_where('where ='.$arr_task['server']);
     
             $pid = pcntl_fork();
             
@@ -179,9 +174,10 @@ class Task {
                 if($arr_task['id']==0)
                 {
             
-                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Need a task id for execute this script', 'ERROR' => 1, 'CODE_ERROR' => NEED_TASK_ID, 'PROGRESS' => 100));
+                    //Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Need a task id for execute this script', 'ERROR' => 1, 'CODE_ERROR' => NEED_TASK_ID, 'PROGRESS' => 100));
                     
-                    die;
+                    echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'Need a task id for execute this script', 'CODE_ERROR' => NEED_TASK_ID));
+                    exit(1);
             
                 }
                 else
@@ -192,14 +188,6 @@ class Task {
                 }
                     
             }
-/*            }
-            else
-            {
-            
-                echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'Need a task id for execute this script', 'CODE_ERROR' => NEED_TASK_ID));
-                exit(1);
-            
-            }*/
             
         }
         else
@@ -210,6 +198,156 @@ class Task {
         
         }
 
+    }
+    
+    static public function make_simple_petition($arr_petition)
+    {
+
+        list($task_id, $arr_task)=Task::daemonize();
+
+        if($task_id!=0)
+        {
+        
+            //use guzzle for send message to server with ca.crt and ca.key
+            
+            //Save results in database, when you go to 100, kill the script saving the result. 
+            //If no answered, error.
+            
+            try {
+            
+                $client = new Client(['base_uri' => 'https://'.$arr_task['ip'].':'.PASTAFARI_PORT.'/pastafari/'.SECRET_KEY_PASTAFARI]);
+                
+                //?category=email&module=email&script=add_account
+                
+                $arr_args=unserialize($arr_task['arguments']);
+                
+                $arr_query=['category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain'];
+                        
+                foreach($arr_args as $key_task => $task)
+                {
+                
+                    $arr_query[$key_task]=$task;
+                
+                }
+                
+                $response = $client->request('GET', '', [ 'query' => $arr_query, 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]);
+                
+                $code = $response->getStatusCode(); // 200
+                $reason = $response->getReasonPhrase(); // OK
+                $uuid='';
+                
+                if($code!=200)
+                {
+                
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                
+                }
+                else
+                {
+                
+                    $body = $response->getBody();
+                    
+                    if(($arr_body=json_decode($body, true)))
+                    {
+                    
+                        $arr_body['task_id']=$task_id;
+                        
+                        $uuid=$arr_body['UUID'];
+                        
+                        Task::log_progress($arr_body);
+                    
+                    }
+                    else
+                    {
+                    
+                        Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                        
+                        die;
+                    
+                    }
+                    
+                    //If all fine, make loop and send message for obtain progress. 500 miliseconds.
+                    
+                    $done=false;
+                    
+                    $client_progress = new Client(['base_uri' => 'https://'.$arr_task['ip'].':'.PASTAFARI_PORT.'/pastafari/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid]);
+                    
+                    $progress=0;
+                    
+                    while(!$done)
+                    {
+                    
+                        //If timeout is excesive, kill the script?.
+                    
+                        sleep(1);
+                        
+                        //Create method for obtain progress
+                        
+                        $response = $client_progress->request('GET', '', [ 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]);
+                    
+                        if($code!=200)
+                        {
+                        
+                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                            
+                            die;
+                        
+                        }
+                        else
+                        {
+                        
+                            $body = $response->getBody();
+                            
+                            if(($arr_body=json_decode($body, true)))
+                            {
+                            
+                                settype($arr_body['PROGRESS'], 'integer');
+                                
+                                if($arr_body['PROGRESS']!=$progress)
+                                {
+                            
+                                    $arr_body['task_id']=$task_id;
+                                    
+                                    Task::log_progress($arr_body);
+                                
+                                    $progress=$arr_body['PROGRESS'];
+                                
+                                }
+                                
+                                //If 100, the script is finished and i can die
+                                
+                                if($arr_body['PROGRESS']==100)
+                                {
+                                
+                                    $done=true;
+                                
+                                }
+                            
+                            }
+                            else
+                            {
+                            
+                                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                                
+                                die;
+                            
+                            }
+                    
+                        }
+                    
+                    }
+                
+                }
+            }
+            catch (Exception $e) {
+                
+                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$e->getMessage(), 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                
+                die;
+            }
+
+        }
+    
     }
             
 }
