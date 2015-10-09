@@ -89,7 +89,7 @@ class Task {
                     
                         //echo Webmodel::$model['task']->std_error;
                         //Save in database
-                        Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, cannot update the task', 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1));
+                        Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, cannot update the task', 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
                         
                     
                     }
@@ -125,9 +125,7 @@ class Task {
 	static public function log_progress($arr_log)
     {
         
-        Webmodel::$model['log_task']->insert($arr_log);
-        
-        echo Webmodel::$model['log_task']->std_error;
+        return Webmodel::$model['log_task']->insert($arr_log);
     
     }
 	
@@ -147,6 +145,13 @@ class Task {
         
         if($options['id']>0)
         {
+            
+            //Obtain task
+            
+            
+
+            
+            //$arr_server=Webmodel::$model['server']->select_a_row_where('where ='.$arr_task['server']);
     
             $pid = pcntl_fork();
             
@@ -166,10 +171,35 @@ class Task {
                 //Daemonizing this element
             
                 $sid = posix_setsid();
+                
+                $arr_task=Webmodel::$model['task']->select_a_row($options['id']);
             
-                return $options['id'];
+                settype($arr_task['id'], 'integer');
+                
+                if($arr_task['id']==0)
+                {
+            
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Need a task id for execute this script', 'ERROR' => 1, 'CODE_ERROR' => NEED_TASK_ID, 'PROGRESS' => 100));
+                    
+                    die;
+            
+                }
+                else
+                {
+                
+                    return array($options['id'], $arr_task);
 
+                }
+                    
             }
+/*            }
+            else
+            {
+            
+                echo json_encode(array('ERROR' => 1, 'MESSAGE' => 'Need a task id for execute this script', 'CODE_ERROR' => NEED_TASK_ID));
+                exit(1);
+            
+            }*/
             
         }
         else
