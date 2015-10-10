@@ -12,6 +12,7 @@ Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
 
 $insert_id=0;
 $process;
+$return_url='';
 
 define('ERROR_UPDATING_TASK', 1);
 define('ERROR_FORK', 2);
@@ -24,6 +25,7 @@ class Task {
 	
         global $insert_id;
         global $process;
+        global $return_url;
 	
         Utils::load_config('config', __DIR__.'/../settings/');
         Utils::load_config('configerrors', __DIR__.'/../settings/');
@@ -46,6 +48,8 @@ class Task {
         $arr_data_task['ip']=$arr_server['ip'];
         
         $arr_data_task['user_id']=$_SESSION['IdUser_admin'];
+        
+        $return_url=$arr_data_task['return'];
         
         if(Webmodel::$model['task']->insert($arr_data_task))
         {
@@ -73,7 +77,7 @@ class Task {
             
             $process->run(function ($type, $buffer) {
             
-                global $insert_id, $process;
+                global $insert_id, $process, $return_url;
                 
                 $arr_buffer=json_decode($buffer, true);
                 
@@ -103,6 +107,8 @@ class Task {
                     }
 
                 }
+            
+                header('Location: '.Routes::add_get_parameters($return_url, array('task_id' => $insert_id)));
             
                 die;
             
@@ -221,7 +227,7 @@ class Task {
                 
                 $arr_args=unserialize($arr_task['arguments']);
                 
-                $arr_query=['category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain'];
+                $arr_query=$arr_petition;
                         
                 foreach($arr_args as $key_task => $task)
                 {
