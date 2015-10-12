@@ -99,12 +99,12 @@ class Task {
                         
                     
                     }
-                    else
+                    /*else
                     {
                     
                         Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Begin script execution...', 'ERROR' => 0, 'CODE_ERROR' => 0));
                     
-                    }
+                    }*/
 
                 }
             
@@ -214,6 +214,8 @@ class Task {
         if($task_id!=0)
         {
         
+            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Begin script execution...', 'ERROR' => 0, 'CODE_ERROR' => 0));
+        
             //use guzzle for send message to server with ca.crt and ca.key
             
             //Save results in database, when you go to 100, kill the script saving the result. 
@@ -245,22 +247,37 @@ class Task {
                 if($code!=200)
                 {
                 
-                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason."\n".$response->getBody(), 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
                 
                 }
                 else
                 {
+                
+                    $done=false;
                 
                     $body = $response->getBody();
                     
                     if(($arr_body=json_decode($body, true)))
                     {
                     
+                        settype($arr_body['ERROR'], 'integer');
+                    
                         $arr_body['task_id']=$task_id;
+                        
+                        settype($arr_body['UUID'], 'string');
                         
                         $uuid=$arr_body['UUID'];
                         
                         Task::log_progress($arr_body);
+                        
+                        if($arr_body['ERROR']>0)
+                        {
+                        
+                            //Error not make more 
+                        
+                            $done=true;
+                        
+                        }
                     
                     }
                     else
@@ -274,7 +291,7 @@ class Task {
                     
                     //If all fine, make loop and send message for obtain progress. 500 miliseconds.
                     
-                    $done=false;
+                    
                     
                     $client_progress = new Client(['base_uri' => 'https://'.$arr_task['ip'].':'.PASTAFARI_PORT.'/pastafari/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid]);
                     
@@ -324,6 +341,15 @@ class Task {
                                 
                                 if($arr_body['PROGRESS']==100)
                                 {
+                                
+                                    if($arr_body['ERROR']==0)
+                                    {
+                                    
+                                        //Set status task to done
+                                        
+                                        //Webmodel::$model['task']
+                                    
+                                    }
                                 
                                     $done=true;
                                 
