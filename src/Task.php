@@ -324,12 +324,12 @@ class Task {
                             if(($arr_body=json_decode($body, true)))
                             {
                             
+                                $arr_body['task_id']=$task_id;
+                            
                                 settype($arr_body['PROGRESS'], 'integer');
                                 
                                 if($arr_body['PROGRESS']!=$progress)
                                 {
-                            
-                                    $arr_body['task_id']=$task_id;
                                     
                                     Task::log_progress($arr_body);
                                 
@@ -350,6 +350,19 @@ class Task {
                                         //Webmodel::$model['task']
                                     
                                     }
+                                    
+                                    Task::log_progress($arr_body);
+                                
+                                    $done=true;
+                                
+                                }
+                                
+                                if($arr_body['ERROR']>0)
+                                {
+                                    
+                                    $arr_body['PROGRESS']=100;
+                                
+                                    Task::log_progress($arr_body);
                                 
                                     $done=true;
                                 
