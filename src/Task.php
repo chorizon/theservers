@@ -4,6 +4,7 @@ namespace Chorizon\TheServers;
 use PhangoApp\PhaModels\Webmodel;
 use PhangoApp\PhaUtils\Utils;
 use PhangoApp\PhaRouter\Routes;
+use PhangoApp\PhaLibs\LoginClass;
 use Symfony\Component\Process\Process;
 use GuzzleHttp\Client;
 use \Exception;
@@ -47,7 +48,7 @@ class Task {
                     
         $arr_data_task['ip']=$arr_server['ip'];
         
-        $arr_data_task['user_id']=$_SESSION['IdUser_admin'];
+        $arr_data_task['user_id']=LoginClass::$session['IdUser_admin'];
         
         $return_url=$arr_data_task['return'];
         
@@ -290,8 +291,6 @@ class Task {
                     }
                     
                     //If all fine, make loop and send message for obtain progress. 500 miliseconds.
-                    
-                    
                     
                     $client_progress = new Client(['base_uri' => 'https://'.$arr_task['ip'].':'.PASTAFARI_PORT.'/pastafari/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid]);
                     
