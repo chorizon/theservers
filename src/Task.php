@@ -48,7 +48,7 @@ class Task {
                     
         $arr_data_task['ip']=$arr_server['ip'];
         
-        $arr_data_task['user_id']=LoginClass::$session['IdUser_admin'];
+        $arr_data_task['user_id']=LoginClass::$session['user_admin']['IdUser_admin'];
         
         $return_url=$arr_data_task['return'];
         
