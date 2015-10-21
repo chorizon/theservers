@@ -26,6 +26,7 @@ define('NEED_TASK_ID', 3);
 define('NO_JSON_RETURNED', 4);
 define('NO_AUTHENTICATED', 5);
 define('SCRIPT_NOT_EXISTS_IN_DB', 6);
+define('CANNOT_EXECUTE_THE_TASK', 7);
 
 class Task {
 
@@ -256,7 +257,7 @@ class Task {
                 if($code!=200)
                 {
                 
-                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason."\n".$response->getBody(), 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason."\n".$response->getBody(), 'ERROR' => 1, 'CODE_ERROR' => CANNOT_EXECUTE_THE_TASK, 'PROGRESS' => 100));
                 
                 }
                 else
@@ -318,7 +319,7 @@ class Task {
                         if($code!=200)
                         {
                         
-                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => CANNOT_EXECUTE_THE_TASK, 'PROGRESS' => 100));
                             
                             die;
                         
@@ -504,7 +505,9 @@ class Task {
                         
                         //Create method for obtain progress
                         
-                        $response = $client_progress->request('GET', '', [ 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]);
+                        //[ 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]
+                        
+                        $response = $client_progress->request('GET', '');
                     
                         if($code!=200)
                         {
