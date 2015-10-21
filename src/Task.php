@@ -15,9 +15,17 @@ $insert_id=0;
 $process;
 $return_url='';
 
+//ERROR code for forks
+
 define('ERROR_UPDATING_TASK', 1);
 define('ERROR_FORK', 2);
 define('NEED_TASK_ID', 3);
+
+//ERROR code for net operations
+
+define('NO_JSON_RETURNED', 4);
+define('NO_AUTHENTICATED', 5);
+define('SCRIPT_NOT_EXISTS_IN_DB', 6);
 
 class Task {
 
@@ -392,6 +400,197 @@ class Task {
 
         }
     
+    }
+    
+    static public function make_simple_petition_ssh($arr_petition)
+    {
+
+        list($task_id, $arr_task)=Task::daemonize();
+
+        if($task_id!=0)
+        {
+        
+            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Begin script execution...', 'ERROR' => 0, 'CODE_ERROR' => 0));
+        
+            //use guzzle for send message to server with ca.crt and ca.key
+            
+            //Save results in database, when you go to 100, kill the script saving the result. 
+            //If no answered, error.
+            
+            try {
+            
+                $client = new Client(['base_uri' => PASTAFARI_URL.'/pastafari/'.SECRET_KEY_PASTAFARI]);
+                
+                //?category=email&module=email&script=add_account
+                
+                $arr_args=unserialize($arr_task['arguments']);
+                
+                $arr_query=$arr_petition;
+                        
+                foreach($arr_args as $key_task => $task)
+                {
+                
+                    $arr_query[$key_task]=$task;
+                
+                }
+                
+                $arr_query['ip']=$arr_task['ip'];
+                
+                $arr_query['task_id']=$task_id;
+                
+                $response = $client->request('GET', '', [ 'query' => $arr_query ]);
+                
+                $code = $response->getStatusCode(); // 200
+                $reason = $response->getReasonPhrase(); // OK
+                $uuid='';
+                
+                if($code!=200)
+                {
+                
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason."\n".$response->getBody(), 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                
+                }
+                else
+                {
+                
+                    $done=false;
+                
+                    $body = $response->getBody();
+                    
+                    if(($arr_body=json_decode($body, true)))
+                    {
+                    
+                        settype($arr_body['ERROR'], 'integer');
+                    
+                        $arr_body['task_id']=$task_id;
+                        
+                        settype($arr_body['UUID'], 'string');
+                        
+                        $uuid=$arr_body['UUID'];
+                        
+                        Task::log_progress($arr_body);
+                        
+                        if($arr_body['ERROR']>0)
+                        {
+                        
+                            //Error not make more 
+                        
+                            $done=true;
+                        
+                        }
+                    
+                    }
+                    else
+                    {
+                    
+                        Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                        
+                        die;
+                    
+                    }
+                    
+                    //If all fine, make loop and send message for obtain progress. 500 miliseconds.
+                    
+                    $client_progress = new Client(['base_uri' => PASTAFARI_URL.'/pastafari/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid]);
+                    
+                    $progress=0;
+                    
+                    while(!$done)
+                    {
+                    
+                        //If timeout is excesive, kill the script?.
+                    
+                        sleep(1);
+                        
+                        //Create method for obtain progress
+                        
+                        $response = $client_progress->request('GET', '', [ 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]);
+                    
+                        if($code!=200)
+                        {
+                        
+                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                            
+                            die;
+                        
+                        }
+                        else
+                        {
+                        
+                            $body = $response->getBody();
+                            
+                            if(($arr_body=json_decode($body, true)))
+                            {
+                            
+                                $arr_body['task_id']=$task_id;
+                            
+                                settype($arr_body['PROGRESS'], 'integer');
+                                
+                                if($arr_body['PROGRESS']!=$progress)
+                                {
+                                    
+                                    Task::log_progress($arr_body);
+                                
+                                    $progress=$arr_body['PROGRESS'];
+                                
+                                }
+                                
+                                //If 100, the script is finished and i can die
+                                
+                                if($arr_body['PROGRESS']==100)
+                                {
+                                
+                                    if($arr_body['ERROR']==0)
+                                    {
+                                    
+                                        //Set status task to done
+                                        
+                                        //Webmodel::$model['task']
+                                    
+                                    }
+                                    
+                                    Task::log_progress($arr_body);
+                                
+                                    $done=true;
+                                
+                                }
+                                
+                                if($arr_body['ERROR']>0)
+                                {
+                                    
+                                    $arr_body['PROGRESS']=100;
+                                
+                                    Task::log_progress($arr_body);
+                                
+                                    $done=true;
+                                
+                                }
+                            
+                            }
+                            else
+                            {
+                            
+                                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                                
+                                die;
+                            
+                            }
+                    
+                        }
+                    
+                    }
+                
+                }
+            }
+            catch (Exception $e) {
+                
+                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$e->getMessage(), 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
+                
+                die;
+            }
+
+        }
+        
     }
             
 }
