@@ -78,7 +78,7 @@ function ProgressView($url_to_progress, $title, $category, $module, $script)
                         {
                             
                             error_txt=data.MESSAGE;
-                            alert(error);
+                            
                             $('#error_message').text(error_txt);
                             final_txt="<?php echo I18n::lang('theserver', 'complete_errors', 'Complete with errors!'); ?>";
                         

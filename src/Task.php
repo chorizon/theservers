@@ -420,7 +420,9 @@ class Task {
             
             try {
             
-                $client = new Client(['base_uri' => PASTAFARI_URL.'/pastafari/'.SECRET_KEY_PASTAFARI]);
+                //http://localhost/pastafari/index.php/arn/53fMA7yr8l3!aGP8Cn!6i5&qJM!AByec/get/category/mail/module/mail_unix/script/add_domain/ip/192.168.2.2/task_id/6/domain/pepe.com
+            
+                $client = new Client(['base_uri' => PASTAFARI_URL.'/index.php/arn/'.SECRET_KEY_PASTAFARI]);
                 
                 //?category=email&module=email&script=add_account
                 
@@ -491,8 +493,9 @@ class Task {
                     }
                     
                     //If all fine, make loop and send message for obtain progress. 500 miliseconds.
+                    //http://localhost/pastafari/index.php/arn/check_process/53fMA7yr8l3!aGP8Cn!6i5&qJM!AByec/a11ed87a-797f-44bb-b19c-53b2e3fff88e/get/ip/192.168.2.2
                     
-                    $client_progress = new Client(['base_uri' => PASTAFARI_URL.'/pastafari/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid]);
+                    $client_progress = new Client(['base_uri' => PASTAFARI_URL.'/index.php/arn/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid.'/get/ip/'.$arr_task['ip']]);
                     
                     $progress=0;
                     
