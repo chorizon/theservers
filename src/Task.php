@@ -504,7 +504,7 @@ class Task {
                     
                         //If timeout is excesive, kill the script?.
                     
-                        sleep(1);
+                        usleep(500);
                         
                         //Create method for obtain progress
                         
@@ -532,7 +532,7 @@ class Task {
                             
                                 settype($arr_body['PROGRESS'], 'integer');
                                 
-                                if($arr_body['PROGRESS']!=$progress)
+                                if($arr_body['PROGRESS']!=$progress && $arr_body['PROGRESS']<100)
                                 {
                                     
                                     Task::log_progress($arr_body);
