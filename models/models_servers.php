@@ -20,6 +20,7 @@ $server->register('ip', new CharField(255), true);
 $server->register('name', new CharField(255), true);
 $server->register('type', new CharField(255), true);
 $server->register('profile', new CharField(255), true);
+$server->register('status', new BooleanField());
 
 //'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments
 
