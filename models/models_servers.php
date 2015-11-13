@@ -7,6 +7,8 @@ use PhangoApp\PhaModels\CoreFields\BooleanField;
 use PhangoApp\PhaModels\CoreFields\ArrayField;
 use PhangoApp\PhaModels\CoreFields\ForeignKeyField;
 use PhangoApp\PhaModels\CoreFields\TextField;
+use PhangoApp\PhaModels\CoreFields\UrlField;
+use PhangoApp\PhaModels\CoreFields\IpField;
 
 //| id | hostname                       | os_codename   | ip           | name                           | type  | profile |
 
@@ -21,6 +23,21 @@ $server->register('name', new CharField(255), true);
 $server->register('type', new CharField(255), true);
 $server->register('profile', new CharField(255), true);
 $server->register('status', new BooleanField());
+
+$server_modules=new Webmodel('server_modules');
+$server_modules->change_id_default('id');
+$server_modules->register('name', new CharField(255), true);
+$server_modules->register('git_url', new UrlField(255), true);
+
+$server_modules_related=new Webmodel('server_modules_related');
+
+$server_modules_related->change_id_default('id');
+
+$server_modules_related->register('server_ip', new IpField(255), true);
+$server_modules_related->components['server_ip']->indexed=1;
+$server_modules_related->register('module_id', new ForeignKeyField($server_modules), true);
+
+//$server_module->register('server', new ForeignKeyField($server), true);
 
 //'category' => 'mail', 'module' => 'mail_unix', 'script' => 'add_domain', 'arguments' => $arguments
 
@@ -61,5 +78,7 @@ $log_task->register('ERROR', new IntegerField(), false);
 $log_task->register('CODE_ERROR', new IntegerField(), false);
 
 $log_task->register('PROGRESS', new IntegerField(), false);
+
+$log_task->register('EXTRADATA', new TextField(), false);
 
 ?>
