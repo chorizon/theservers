@@ -215,7 +215,7 @@ class Task {
         }
 
     }
-    
+    /*
     static public function make_simple_petition($arr_petition)
     {
 
@@ -401,7 +401,7 @@ class Task {
 
         }
     
-    }
+    }*/
     
     static public function make_simple_petition_ssh($arr_petition)
     {
@@ -427,6 +427,8 @@ class Task {
                 //?category=email&module=email&script=add_account
                 
                 $arr_args=unserialize($arr_task['arguments']);
+                
+                $arr_extra_args=unserialize($arr_task['extra_arguments']);
                 
                 $arr_query=$arr_petition;
                         
@@ -551,7 +553,9 @@ class Task {
                                     
                                         //Set status task to done
                                         
-                                        //Webmodel::$model['task']
+                                        //Webmodel::$model['task']->update(
+                                        
+                                        //make last tasks via callback
                                     
                                     }
                                     
@@ -587,6 +591,10 @@ class Task {
                     }
                 
                 }
+                
+                //If all fine, return arguments
+                
+                return [$arr_args, $arr_extra_args];
             }
             catch (Exception $e) {
                 

@@ -60,6 +60,7 @@ $task->register('module', new CharField(255), true);
 $task->register('script', new CharField(255), true);
 
 $task->register('arguments', new ArrayField(new CharField(255)), false);
+$task->register('extra_arguments', new ArrayField(new CharField(255)), false);
 
 $task->register('status', new BooleanField());
 
