@@ -83,8 +83,8 @@ class Task {
             
             $process = new Process('php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script.' --id '.$insert_id);
             
-            //echo 'php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script;
-            
+            //echo 'php '.Routes::$base_path.'/console.php -m '.$category.'/'.$module.' -c '.$script.' --id '.$insert_id;
+            //die;
             $process->run(function ($type, $buffer) {
             
                 global $insert_id, $process, $return_url;
@@ -403,7 +403,7 @@ class Task {
     
     }*/
     
-    static public function make_simple_petition_ssh($arr_petition)
+    static public function make_simple_petition_ssh($arr_petition, $callback='')
     {
 
         list($task_id, $arr_task)=Task::daemonize();
@@ -418,7 +418,8 @@ class Task {
             //Save results in database, when you go to 100, kill the script saving the result. 
             //If no answered, error.
             
-            try {
+            try 
+            {
             
                 //http://localhost/pastafari/index.php/arn/53fMA7yr8l3!aGP8Cn!6i5&qJM!AByec/get/category/mail/module/mail_unix/script/add_domain/ip/192.168.2.2/task_id/6/domain/pepe.com
             
@@ -429,6 +430,8 @@ class Task {
                 $arr_args=unserialize($arr_task['arguments']);
                 
                 $arr_extra_args=unserialize($arr_task['extra_arguments']);
+                
+                $arr_extra_args['task_id']=$task_id;
                 
                 $arr_query=$arr_petition;
                         
@@ -497,9 +500,11 @@ class Task {
                     //If all fine, make loop and send message for obtain progress. 500 miliseconds.
                     //http://localhost/pastafari/index.php/arn/check_process/53fMA7yr8l3!aGP8Cn!6i5&qJM!AByec/a11ed87a-797f-44bb-b19c-53b2e3fff88e/get/ip/192.168.2.2
                     
-                    $client_progress = new Client(['base_uri' => PASTAFARI_URL.'/index.php/arn/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid.'/get/ip/'.$arr_task['ip']]);
+                    $client_progress = new Client(['base_uri' => PASTAFARI_URL.'/index.php/arn/check_process/'.SECRET_KEY_PASTAFARI.'/'.$uuid.'/get/ip/'.$arr_task['ip'].'/']);
                     
                     $progress=0;
+                    
+                    $num_line=0;
                     
                     while(!$done)
                     {
@@ -512,7 +517,7 @@ class Task {
                         
                         //[ 'verify' => PASTAFARI_SSL_VERIFY, 'cert' => PASTAFARI_SSL_CERT ]
                         
-                        $response = $client_progress->request('GET', '');
+                        $response = $client_progress->request('GET', 'num_line/'.$num_line);
                     
                         if($code!=200)
                         {
@@ -556,6 +561,26 @@ class Task {
                                         //Webmodel::$model['task']->update(
                                         
                                         //make last tasks via callback
+                                        
+                                        //If all fine, return arguments
+                
+                                        if($callback!='')
+                                        {
+                                        
+                                            $callback($arr_args, $arr_extra_args);
+                                            
+                                        }
+                                        
+                                        Webmodel::$model['task']->reset_require();
+    
+                                        Webmodel::$model['task']->set_conditions(['where id=?', [$task_id]]);
+                                        
+                                        if(!Webmodel::$model['task']->update(array('status' => 1)))
+                                        {
+                                        
+                                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error: sorry, i add the new domain to the server but i cannot set the task how done'.Webmodel::$model['task']->std_error, 'ERROR' => 1, 'PROGRESS' => 100, 'CODE_ERROR' => 4));
+                                        
+                                        }
                                     
                                     }
                                     
@@ -587,14 +612,13 @@ class Task {
                             }
                     
                         }
+                        
+                        $num_line++;
                     
                     }
                 
                 }
                 
-                //If all fine, return arguments
-                
-                return [$arr_args, $arr_extra_args];
             }
             catch (Exception $e) {
                 

@@ -30,7 +30,7 @@ function ProgressView($url_to_progress, $title, $category, $module, $script)
         
             var progressbar = $( "#progressbar" ),
             progressLabel = $( ".progress-label" );
-            final_txt="<?php echo I18n::lang('theserver', 'complete', 'Complete!'); ?>";
+            final_txt="<?php echo I18n::lang('theserver', 'complete', 'The task is complete!'); ?>";
             error_txt='';
             
             progressbar.progressbar({
@@ -86,7 +86,8 @@ function ProgressView($url_to_progress, $title, $category, $module, $script)
                         else
                         {
                         
-                            final_txt=data.MESSAGE;
+                            //final_txt=data.MESSAGE;
+                            final_txt="<?php echo I18n::lang('theserver', 'finished_successfully', 'Finished successfully!'); ?>";
                         
                         }
                         
