@@ -53,8 +53,8 @@ class Task {
         
         $arr_data_task['pid']=0;
         
-        $arr_server=Webmodel::$model['server']->select_a_row($arr_data_task['server']);
-                    
+        $arr_server=Webmodel::$model['server']->select_a_row($arr_data_task['server'], array(), true);
+        
         $arr_data_task['ip']=$arr_server['ip'];
         
         $arr_data_task['user_id']=LoginClass::$session['user_admin']['IdUser_admin'];
@@ -117,7 +117,18 @@ class Task {
                     }*/
 
                 }
-            
+                
+                
+                if(!$process->isSuccessful()) 
+                {
+                
+                    
+                
+                    Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, no exists the script for console!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                
+                
+                }
+                
                 header('Location: '.Routes::add_get_parameters($return_url, array('task_id' => $insert_id)));
             
                 die;
