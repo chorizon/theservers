@@ -158,10 +158,26 @@ class Task {
     
     }
 	
-	static public function get_progress($idtask)
+	static public function get_progress($task_id)
 	{
 	
+        Webmodel::load_model('vendor/chorizon/theservers/models/models_servers');
+	
+        settype($task_id, 'integer');
         
+        $model=&Webmodel::$m;
+        
+        $model->log_task->conditions='where task_id='.$task_id;
+        
+        $model->log_task->order_by='order by id DESC';
+        
+        $model->log_task->limit='limit 1';
+    
+        $arr_log=$model->log_task->select_a_row_where();
+        
+        header('Content-type: text/plain');
+        
+        return json_encode($arr_log);
 	
 	}
 	
