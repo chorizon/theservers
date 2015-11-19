@@ -8,7 +8,7 @@ function acceptDeleteView($real_url, array $hidden)
 
 ?>
 <form method="get" action="<?php echo $real_url; ?>">
-<?php echo I18n::lang('theservers', 'action_delete', 'ONLY CLICK ACCEPT IF YOU ARE SURE OF DELETE THIS ELEMENT'); ?>: <input type="submit" value="<?php echo I18n::lang('common', 'delete', 'Delete'); ?>">
+<span class="error"><?php echo I18n::lang('theservers', 'action_delete', 'CLICK ONLY IF YOU ARE SURE OF DELETE THIS ELEMENT'); ?></span>: <input type="submit" value="<?php echo I18n::lang('common', 'delete', 'Delete'); ?>">
 <?php
 
 foreach($hidden as $field => $value)
