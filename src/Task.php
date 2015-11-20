@@ -125,6 +125,19 @@ class Task {
                     
                 
                     Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, no exists the script for console!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                    
+                    //Set task with error
+                    
+                     Webmodel::$model['task']->reset_require();
+                    
+                    Webmodel::$model['task']->conditions='WHERE id='.$insert_id;
+                    
+                    if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                    {
+                    
+                        Task::log_progress(array('task_id' => $insert_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                    
+                    }
                 
                 
                 }
@@ -482,6 +495,17 @@ class Task {
                 if($code!=200)
                 {
                 
+                    Webmodel::$model['task']->reset_require();
+                    
+                    Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                    
+                    if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                    {
+                    
+                        Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                    
+                    }
+                
                     Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason."\n".$response->getBody(), 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
                 
                 }
@@ -510,6 +534,17 @@ class Task {
                         
                             //Error not make more 
                         
+                            Webmodel::$model['task']->reset_require();
+                    
+                            Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                            
+                            if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                            {
+                            
+                                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                            
+                            }
+                        
                             $done=true;
                         
                         }
@@ -517,6 +552,17 @@ class Task {
                     }
                     else
                     {
+                    
+                        Webmodel::$model['task']->reset_require();
+                    
+                        Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                        
+                        if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                        {
+                        
+                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                        
+                        }
                     
                         Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
                         
@@ -548,6 +594,17 @@ class Task {
                     
                         if($code!=200)
                         {
+                            
+                            Webmodel::$model['task']->reset_require();
+                    
+                            Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                            
+                            if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                            {
+                            
+                                Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                            
+                            }
                         
                             Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$reason, 'ERROR' => 1, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
                             
@@ -610,6 +667,21 @@ class Task {
                                         }
                                     
                                     }
+                                    else
+                                    {
+                                    
+                                        Webmodel::$model['task']->reset_require();
+    
+                                        Webmodel::$model['task']->set_conditions(['where id=?', [$task_id]]);
+                                        
+                                        if(!Webmodel::$model['task']->update(array('status' => 1, 'error' => 1)))
+                                        {
+                                        
+                                            Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error: sorry, i add the new domain to the server but i cannot set the task how done'.Webmodel::$model['task']->std_error, 'ERROR' => 1, 'PROGRESS' => 100, 'CODE_ERROR' => 4));
+                                        
+                                        }
+                                    
+                                    }
                                     
                                     Task::log_progress($arr_body);
                                 
@@ -619,6 +691,17 @@ class Task {
                                 
                                 if($arr_body['ERROR']>0)
                                 {
+                                
+                                    Webmodel::$model['task']->reset_require();
+                    
+                                    Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                                    
+                                    if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                                    {
+                                    
+                                        Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                                    
+                                    }
                                     
                                     $arr_body['PROGRESS']=100;
                                 
@@ -631,6 +714,17 @@ class Task {
                             }
                             else
                             {
+                            
+                                Webmodel::$model['task']->reset_require();
+                    
+                                Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                                
+                                if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                                {
+                                
+                                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                                
+                                }
                             
                                 Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, i don\'t understand the message from server: '.$body, 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
                                 
@@ -648,6 +742,17 @@ class Task {
                 
             }
             catch (Exception $e) {
+            
+                Webmodel::$model['task']->reset_require();
+                    
+                Webmodel::$model['task']->conditions='WHERE id='.$task_id;
+                
+                if(!Webmodel::$model['task']->update(array('error' => 1, 'status' => 1)))
+                {
+                
+                    Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot set how erroneous this task!: '.$process->getOutput(), 'ERROR' => ERROR_UPDATING_TASK, 'CODE_ERROR' => 1, 'PROGRESS' => 100));
+                
+                }
                 
                 Task::log_progress(array('task_id' => $task_id, 'MESSAGE' => 'Error, cannot execute the task: '.$e->getMessage(), 'ERROR' => 1, 'CODE_ERROR' => NO_JSON_RETURNED, 'PROGRESS' => 100));
                 

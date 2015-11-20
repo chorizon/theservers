@@ -64,6 +64,10 @@ $task->register('extra_arguments', new ArrayField(new CharField(255)), false);
 
 $task->register('status', new BooleanField());
 
+//0 not error registered, 1 error registered
+
+$task->register('error', new BooleanField());
+
 //array('MESSAGE' => "Executing script ${options['command']}...", 'ERROR' => 0, 'CODE_ERROR' => 0, 'PROGRESS' => 0)
 
 $log_task=new Webmodel('log_task');
@@ -74,7 +78,7 @@ $log_task->register('task_id', new ForeignKeyField($task), true);
 
 $log_task->register('MESSAGE', new TextField(), false);
 
-$log_task->register('ERROR', new IntegerField(), false);
+$log_task->register('ERROR', new BooleanField(), false);
 
 $log_task->register('CODE_ERROR', new IntegerField(), false);
 
