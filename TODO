@@ -1,6 +1,6 @@
 TODO:
 
-- In mail_unix define a method for disable the domain
+- In mail_unix define a method for disable the domain and see the space filled for all users.
 - In tasks define a method for shutdown php tasks in local server
 - In tasks define a method for check tasks in remote servers 
 
